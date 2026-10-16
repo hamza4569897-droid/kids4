@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-heading: 'Baloo Bhaijaan 2', cursive, system-ui, sans-serif;
+    --font-body: 'Tajawal', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 3px solid #f59e0b;
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom friendly scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #fef3c7;
+}
+::-webkit-scrollbar-thumb {
+  background: #fcd34d;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}
+
+/* Print Optimization for Worksheets and Assessments */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, header, footer, interactive overlays during print */
+  header,
+  nav,
+  footer,
+  aside,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Page break rules */
+  .page-break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
