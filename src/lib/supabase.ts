@@ -1,23 +1,18 @@
+/// <reference types="vite/client" />
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Safe environment getter compatible with Vite browser bundling and test runners
-const getEnvVar = (name: string): string => {
-  try {
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.[name]) {
-      return (import.meta as any).env[name];
-    }
-  } catch {
-    // ignore
-  }
-  if (typeof process !== 'undefined' && process.env?.[name]) {
-    return process.env[name] || '';
-  }
-  return '';
-};
+const stripQuotes = (v: unknown): string =>
+  String(v ?? '').replace(/^["']|["']$/g, '').trim();
 
-const rawUrl = getEnvVar('VITE_SUPABASE_URL').replace(/^["']|["']$/g, '').trim();
-export const cleanSupabaseUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
-const rawKey = getEnvVar('VITE_SUPABASE_ANON_KEY').replace(/^["']|["']$/g, '').trim();
+// IMPORTANT: Vite only replaces these when written with the full literal name
+// (import.meta.env.VITE_XXX). Do NOT read them dynamically via env[name].
+const rawUrl = stripQuotes(import.meta.env.VITE_SUPABASE_URL);
+const rawKey = stripQuotes(import.meta.env.VITE_SUPABASE_ANON_KEY);
+const rawAdminEmail = stripQuotes(import.meta.env.VITE_ADMIN_EMAIL);
+
+export const cleanSupabaseUrl = rawUrl
+  .replace(/\/rest\/v1\/?$/, '')
+  .replace(/\/+$/, '');
 export const supabaseAnonKey = rawKey;
 
 /**
@@ -26,8 +21,6 @@ export const supabaseAnonKey = rawKey;
 export const isSupabaseConfigured = (): boolean => {
   if (!cleanSupabaseUrl || !supabaseAnonKey) return false;
   if (
-    cleanSupabaseUrl === '' ||
-    supabaseAnonKey === '' ||
     cleanSupabaseUrl.includes('your-project.supabase.co') ||
     supabaseAnonKey.includes('your-anon-key') ||
     !cleanSupabaseUrl.startsWith('https://')
@@ -61,9 +54,11 @@ export const supabase = clientInstance;
  */
 export const getSupabaseConfig = () => ({
   url: cleanSupabaseUrl || '',
-  anonKeyPresent: Boolean(supabaseAnonKey && !supabaseAnonKey.includes('your-anon-key')),
+  anonKeyPresent: Boolean(
+    supabaseAnonKey && !supabaseAnonKey.includes('your-anon-key')
+  ),
   isConfigured: isSupabaseConfigured(),
-  configuredEmail: getEnvVar('VITE_ADMIN_EMAIL').replace(/^["']|["']$/g, '').trim(),
+  configuredEmail: rawAdminEmail,
 });
 
 /**
@@ -78,11 +73,17 @@ export const checkIsAdminFromDatabase = async (): Promise<{
   error?: string;
 }> => {
   if (!isSupabaseConfigured() || !supabase) {
-    return { isAdmin: false, error: 'قاعدة بيانات Supabase غير مهيأة بعد في متغيرات البيئة.' };
+    return {
+      isAdmin: false,
+      error: 'قاعدة بيانات Supabase غير مهيأة بعد في متغيرات البيئة.',
+    };
   }
 
   try {
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
     if (sessionError || !session || !session.user) {
       return { isAdmin: false, error: 'لا توجد جلسة مصادقة نشطة.' };
     }
